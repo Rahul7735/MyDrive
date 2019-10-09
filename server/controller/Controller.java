@@ -1,6 +1,7 @@
 package server.controller;
 
 import clients.MongoClient;
+import clients.S3Client;
 import com.google.gson.Gson;
 import configs.Config;
 import exceptions.BadRequest;
@@ -19,15 +20,19 @@ public class Controller {
      final static Logger logger;
      public static Config config;
      public static MongoClient mongoClient;
+     public static S3Client s3Client;
     static {
         gson=new Gson();
         validator=new Validator();
         logger=Logger.getLogger("spark");
         config=Config.getInstance();
 
+
+
         try {
             validator.loadMappings();
             mongoClient=MongoClient.getInstance();
+            s3Client=S3Client.getInstance();
         }catch (Exception e){
             logger.error("Error in BaseController"+e.getMessage());
            // System.out.println("Error in loading mapping");

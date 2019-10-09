@@ -9,6 +9,11 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 import java.io.File;
 import java.io.InputStream;
@@ -19,6 +24,7 @@ import java.util.List;
 
 import configs.Config;
 import exceptions.CloudException;
+import spark.utils.IOUtils;
 
 
 public class S3Client {
@@ -56,8 +62,6 @@ public class S3Client {
     public void fileUpload(String src, String dest) throws CloudException {
 
         System.out.println("Uploading file from " + src + " to " + dest);
-
-
         try {
             this.client.putObject(this.bucket, dest, new File(src));
         } catch (AmazonServiceException e) {
@@ -121,13 +125,37 @@ public class S3Client {
 
     }
 
+    public byte[] getFileByteArray(String src)throws CloudException {
+
+        try {
+            if (!pathExists(src)){
+                throw new CloudException("File doesn't exist");
+            }
+            // Adding file name to the destination path
+            String[] array = src.split("/");
+            int len = array.length;
+            // Get an object and getting its contents.
+            System.out.println("Downloading an object");
+            S3Object fullObject = this.client.getObject(new GetObjectRequest(this.bucket, src));
+            // Get a range of bytes from an object and print the bytes.
+            InputStream inputStream = fullObject.getObjectContent();
+            return IOUtils.toByteArray(inputStream);
+        } catch (Exception e) {
+            throw new CloudException(e.getMessage()+". Exception Occurred in fileDownload");
+        }
+
+    }
+
 
     public void deleteFile(String filepath) throws CloudException {
 
         try {
+            if (!pathExists(filepath)){
+                throw new CloudException("File doesn't exist");
+            }
             this.client.deleteObject(this.bucket, filepath);
         } catch (Exception e) {
-            throw new CloudException(e.getMessage()+"Exeception occurred in deleteFile");
+            throw new CloudException(e.getMessage()+". Exception occurred in deleteFile");
         }
     }
 
@@ -146,14 +174,25 @@ public class S3Client {
         }
         return keys;
     }
+
+    public boolean pathExists(String path) throws CloudException{
+        try{
+            return this.client.doesObjectExist(this.bucket, path);
+        } catch (Exception e){
+            throw new CloudException(e.getMessage());
+        }
+    }
+
+
+
     public void deleteFolder(String folder) throws CloudException{
         try {
-
-
+            if(!pathExists(folder)){
+                throw new CloudException("folder doesn't exist.");
+            }
             List<String> list = this.listDirectory(folder);
             for (String key : list) {
                 this.deleteFile(key);
-
             }
         }catch (Exception e){
             throw new CloudException(e.getMessage()+"Exception Occurred in delete Folder");
@@ -188,5 +227,29 @@ public class S3Client {
        }
 
     }
+
+    public double getFoldersize(String folderpath) throws CloudException{
+        try {
+
+            if(!pathExists(folderpath)){
+                throw new CloudException("folder doesn't exist.");
+            }
+            long totalSize = 0;
+            ObjectListing objects = this.client.listObjects(this.bucket, folderpath);
+            for (S3ObjectSummary objectSummary : objects.getObjectSummaries()) {
+                totalSize += objectSummary.getSize();
+            }
+
+            return totalSize/(1000*1000);
+
+
+        }catch (Exception e){
+            throw new CloudException(e.getMessage()+"Exception occurred in get folderSize");
+        }
+    }
+
+
+
+
 
 }

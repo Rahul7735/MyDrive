@@ -20,6 +20,10 @@ public class User {
    private String username;
    private String email;
 
+   public User(){
+
+   }
+
    public User(Map<String,Object> parseMap)throws ValidationException,DataBaseException{
        this.setName((String)parseMap.get("name"));
        this.setPassword((String)parseMap.get("password"));
