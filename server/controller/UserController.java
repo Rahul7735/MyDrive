@@ -10,6 +10,7 @@ import exceptions.BadRequest;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import server.util.Utils;
 import spark.Route;
 
 import java.util.ArrayList;
@@ -72,7 +73,7 @@ public class UserController extends Controller {
             }
             String password = documents.get(0).getString("password");
             Map<String, Object> map = new LinkedHashMap<>();
-            if (parseMap.get("password").equals(password)) {
+            if (Utils.encode((String)parseMap.get("password")).equals(password)) {
                 map.put("status", "success");
             } else {
                 map.put("status", "Invalid Credentials");

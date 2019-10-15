@@ -8,7 +8,9 @@ import exceptions.ValidationException;
 import clients.MongoClient;
 import configs.Config;
 import org.bson.Document;
+import server.util.Utils;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +26,7 @@ public class User {
 
    }
 
-   public User(Map<String,Object> parseMap)throws ValidationException,DataBaseException{
+   public User(Map<String,Object> parseMap)throws ValidationException,DataBaseException,NoSuchAlgorithmException{
        this.setName((String)parseMap.get("name"));
        this.setPassword((String)parseMap.get("password"));
       if (parseMap.get("age")!=null){
@@ -51,13 +53,13 @@ public class User {
         return password;
     }
 
-    public User setPassword(String password) throws ValidationException {
+    public User setPassword(String password) throws ValidationException, NoSuchAlgorithmException {
         if (!isPasswordValid(password)){
 
             throw  new ValidationException("Password should contain atleast one capital and small and should be" +
                     "atleast 6 letters");
         }
-        this.password = password;
+        this.password = Utils.encode(password);
         return this;
     }
 
